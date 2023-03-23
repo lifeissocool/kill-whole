@@ -38,6 +38,6 @@ jobs:
         with:
           app-name: 'kill-whole'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_87D778F7C62645D4A006DD2149E6D1E7 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6E947243FA3845F8823788705E05143E }}
           package: '${{ env.PACKAGE_DIRECTORY }}'
           respect-pom-xml: true
