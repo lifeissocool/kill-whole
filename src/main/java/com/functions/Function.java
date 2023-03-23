@@ -35,7 +35,8 @@ public class Function {
         okHttpClient = builder.build();
     }
 
-    private String url = "https://api.openai.com/v1/chat/completions";
+    private String defaultUrl = "https://api.openai.com/v1/chat/completions";
+    private String defaultToken = "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";
     /**
      * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
      * 1. curl -d "HTTP Body" {your host}/api/HttpExample
@@ -50,13 +51,16 @@ public class Function {
                 HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) throws IOException {
         context.getLogger().info("Java HTTP trigger processed a request.");
+        String token = request.getQueryParameters().get("token");
+        String url = request.getQueryParameters().get("url");
+        context.getLogger().info("token:"+token+",url:"+url);
 
         final String params = request.getBody().orElse("");
         if (params == null || params .equals("")) {
             return request.createResponseBuilder(HttpStatus.OK).body("请求参数不能为空").build();
         }
         RequestBody body = RequestBody.create(params, MediaType.parse("application/json; charset=utf-8"));
-        Request req = new Request.Builder().header("Authorization","Bearer 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").url(url).post(body).build();
+        Request req = new Request.Builder().header("Authorization","Bearer "+Optional.ofNullable(token).orElse(defaultToken)).url(Optional.ofNullable(url).orElse(defaultUrl)).post(body).build();
         Response execute = okHttpClient.newCall(req).execute();
         return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
     }
