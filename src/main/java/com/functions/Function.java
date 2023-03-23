@@ -15,12 +15,11 @@ import com.microsoft.azure.functions.annotation.AuthorizationLevel;
 import com.microsoft.azure.functions.annotation.FixedDelayRetry;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import com.sun.xml.internal.ws.util.StringUtils;
+import okhttp3.*;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +36,8 @@ public class Function {
         builder.connectionPool(new ConnectionPool(30, 30, TimeUnit.MINUTES));
         okHttpClient = builder.build();
     }
+
+    private String url = "https://api.openai.com/v1/chat/completions";
     /**
      * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
      * 1. curl -d "HTTP Body" {your host}/api/HttpExample
@@ -52,18 +53,14 @@ public class Function {
             final ExecutionContext context) throws IOException {
         context.getLogger().info("Java HTTP trigger processed a request.");
 
-        // Parse query parameter
-        final String query = request.getQueryParameters().get("name");
-        final String name = request.getBody().orElse(query);
-
-        Request req = new Request.Builder().url("https://google.com").get().build();
-        Response execute = okHttpClient.newCall(req).execute();
-
-        if (name == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
-        } else {
-            return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
+        final String params = request.getBody().orElse("");
+        if (params == null || params .equals("")) {
+            return request.createResponseBuilder(HttpStatus.OK).body("请求参数不能为空").build();
         }
+        RequestBody body = RequestBody.create(params, MediaType.parse("application/json; charset=utf-8"));
+        Request req = new Request.Builder().header("Authorization","Bearer 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").url(url).post(body).build();
+        Response execute = okHttpClient.newCall(req).execute();
+        return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
     }
 
     /**
