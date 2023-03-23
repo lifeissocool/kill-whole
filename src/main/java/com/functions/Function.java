@@ -56,7 +56,7 @@ public class Function {
             return request.createResponseBuilder(HttpStatus.OK).body("请求参数不能为空").build();
         }
         RequestBody body = RequestBody.create(params, MediaType.parse("application/json; charset=utf-8"));
-        Request req = new Request.Builder().header("Authorization","Bearer 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").url(url).post(body).build();
+        Request req = new Request.Builder().header("Authorization","Bearer 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").url(url).post(body).build();
         Response execute = okHttpClient.newCall(req).execute();
         return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
     }
