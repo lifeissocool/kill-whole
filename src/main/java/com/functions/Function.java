@@ -32,10 +32,12 @@ public class Function {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
         builder.retryOnConnectionFailure(false);
         builder.connectionPool(new ConnectionPool(30, 30, TimeUnit.MINUTES));
+        builder.connectTimeout(30, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS);
         okHttpClient = builder.build();
     }
 
     private String defaultUrl = "https://api.openai.com/v1/chat/completions";
+    private String defaultImageUrl = "https://api.openai.com/v1/chat/completions";
     private String defaultToken = "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";
     /**
      * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
@@ -65,12 +67,7 @@ public class Function {
         return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
     }
 
-    /**
-     * This function listens at endpoint "/api/HttpExampleRetry". The function is re-executed in case of errors until the maximum number of retries occur.
-     * Retry policies: https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-error-pages?tabs=java
-     */
-    @FunctionName("HttpExampleRetry")
-    @FixedDelayRetry(maxRetryCount = 3, delayInterval = "00:00:05")
+    @FunctionName("HttpImageService")
     public HttpResponseMessage HttpExampleRetry(
         @HttpTrigger(
             name = "req",
@@ -78,22 +75,18 @@ public class Function {
             authLevel = AuthorizationLevel.ANONYMOUS)
             HttpRequestMessage<Optional<String>> request,
         final ExecutionContext context) throws Exception {
-        context.getLogger().info("Java HTTP trigger processed a request.");
+        String token = request.getQueryParameters().get("token");
+        String url = request.getQueryParameters().get("url");
+        context.getLogger().info("token:"+token+",url:"+url);
 
-        if(count<3) {
-            count ++;
-            throw new Exception("error");
+        final String params = request.getBody().orElse("");
+        if (params == null || params .equals("")) {
+            return request.createResponseBuilder(HttpStatus.OK).body("请求参数不能为空").build();
         }
-
-        // Parse query parameter
-        final String query = request.getQueryParameters().get("name");
-        final String name = request.getBody().orElse(query);
-
-        if (name == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
-        } else {
-            return request.createResponseBuilder(HttpStatus.OK).body(name).build();
-        }
+        RequestBody body = RequestBody.create(params, MediaType.parse("application/json; charset=utf-8"));
+        Request req = new Request.Builder().header("Authorization","Bearer "+Optional.ofNullable(token).orElse(defaultToken)).url(Optional.ofNullable(url).orElse(defaultImageUrl)).post(body).build();
+        Response execute = okHttpClient.newCall(req).execute();
+        return request.createResponseBuilder(HttpStatus.OK).body(execute.body().string()).build();
     }
 
     /**
