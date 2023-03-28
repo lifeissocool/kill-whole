@@ -37,7 +37,7 @@ public class Function {
     }
 
     private String defaultUrl = "https://api.openai.com/v1/chat/completions";
-    private String defaultImageUrl = "https://api.openai.com/v1/chat/completions";
+    private String defaultImageUrl = "https://api.openai.com/v1/images/generations";
     private String defaultToken = "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";
     /**
      * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
